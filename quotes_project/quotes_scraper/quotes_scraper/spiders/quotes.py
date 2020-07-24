@@ -15,12 +15,8 @@ class QuotesSpider(scrapy.Spider):
         quotes      = response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall()
         topTenTags  = response.xpath('//div[contains(@class, "tags-box")]//span[@class="tag-item"]/a/text()').getall()
         
-        print('*'*10, end='\n')
-        #print(response.status, response.headers)
-        print(f"""Se extrajo de la pagina:
-        Titulo              {title}\n
-        Citas               {quotes}\n
-        Top 10 etiquetas    
-        """)
-        print(*topTenTags, sep='\n-')
-        print('*'*10, end='\n')
+        yield {
+            'title': title,
+            'quotes': quotes,
+            'top_ten_tags': topTenTags
+        }
