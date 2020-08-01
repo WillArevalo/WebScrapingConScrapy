@@ -16,20 +16,38 @@ class QuotesSpider(scrapy.Spider):
         'FEED_FORMAT':'json'
     }
 
-    def parse(self, response):  # Este metodo analiza toda la respuesta y trae solo lo que queremos
-        
-        url         = response.url
-        title       = response.xpath('//h1/a/text()').get()
-        quotes      = response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall()
-        topTenTags  = response.xpath('//div[contains(@class, "tags-box")]//span[@class="tag-item"]/a/text()').getall()
-        
-        yield {
-            'url':url,
-            'title': title,
-            'quotes': quotes,
-            'top_ten_tags': topTenTags
-        }
+    def parse_only_quotes(self, response, **kwargs):
+        if kwargs:
+            new_quotes = response.xpath(
+                '//span[@class="text" and @itemprop="text"]/text()'
+            ).getall()
+            new_url = response.url
+            kwargs["quotes"].extend(new_quotes)
+            kwargs["urls"].append(new_url)
 
         next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
         if next_page_button_link:
-            yield response.follow(next_page_button_link, callback=self.parse)   #Follow recibe 2 params, el link y el callback que es la funcion que se ejecuta luego de entrar a la pagina
+            yield response.follow(next_page_button_link, callback=self.parse_only_quotes, cb_kwargs=kwargs)   #Follow recibe 3 params, el link y el callback que es la funcion que se ejecuta luego de entrar a la pagina, con args que le puedo pasar
+        else:
+            yield kwargs
+
+
+    def parse(self, response):  # Este metodo analiza toda la respuesta y trae solo lo que queremos
+        
+        urls            = list()
+        urls.append(response.url)
+        title           = response.xpath('//h1/a/text()').get()
+        quotes          = response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall()
+        topTenTags      = response.xpath('//div[contains(@class, "tags-box")]//span[@class="tag-item"]/a/text()').getall()
+        
+        next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
+        if next_page_button_link:
+            yield response.follow(
+                next_page_button_link, 
+                callback=self.parse_only_quotes, 
+                cb_kwargs={
+                    'title': title,
+                    'top_ten_tags': topTenTags,
+                    'urls':urls,
+                    'quotes':quotes
+                })   #Follow recibe 3 params, el link y el callback que es la funcion que se ejecuta luego de entrar a la pagina, con args que le puedo pasar
