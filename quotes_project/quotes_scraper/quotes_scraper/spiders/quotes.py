@@ -38,8 +38,13 @@ class QuotesSpider(scrapy.Spider):
         urls.append(response.url)
         title           = response.xpath('//h1/a/text()').get()
         quotes          = response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall()
-        topTenTags      = response.xpath('//div[contains(@class, "tags-box")]//span[@class="tag-item"]/a/text()').getall()
+        topTags         = response.xpath('//div[contains(@class, "tags-box")]//span[@class="tag-item"]/a/text()').getall()
         
+        top = getattr(self, 'top', None)
+        if top:
+            top = int(top)
+            topTags = topTags[:top]
+
         next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
         if next_page_button_link:
             yield response.follow(
@@ -47,7 +52,7 @@ class QuotesSpider(scrapy.Spider):
                 callback=self.parse_only_quotes, 
                 cb_kwargs={
                     'title': title,
-                    'top_ten_tags': topTenTags,
+                    'top_tags': topTags,
                     'urls':urls,
                     'quotes':quotes
                 })   #Follow recibe 3 params, el link y el callback que es la funcion que se ejecuta luego de entrar a la pagina, con args que le puedo pasar
