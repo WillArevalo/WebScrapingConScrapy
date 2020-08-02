@@ -13,7 +13,12 @@ class QuotesSpider(scrapy.Spider):
 
     custom_settings = {           # Esta configuracion permite ejecutar y guardar automaticamente
         'FEED_URI':'quotes.json',
-        'FEED_FORMAT':'json'
+        'FEED_FORMAT':'json',
+        'CONCURRENT_REQUESTS': 24,
+        'MEMUSAGE_LIMIT_MB': 2048,
+        'MEMUSAGE_NOTIFY_MAIL':['correofalso123@gmail.com'],
+        'USER_AGENT': 'iPiedrita',
+        'FEED_EXPORT_ENCODING': 'utf-8'
     }
 
     def parse_only_quotes(self, response, **kwargs):
